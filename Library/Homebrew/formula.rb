@@ -157,6 +157,7 @@ class Formula
   def keg_only?; false end
 >>>>>>> ee2b521ca8 (Solving the GNU GetText issues)
 
+<<<<<<< HEAD
   # The {Tap} instance associated with this {Formula}.
   # If it's `nil`, then this formula is loaded from a path or URL.
   #
@@ -335,6 +336,28 @@ class Formula
       name
     else
       "#{@tap}/#{name}"
+=======
+  # yields self with current working directory set to the uncompressed tarball
+  def brew
+    validate_variable :name
+    validate_variable :version
+
+    stage do
+      begin
+        patch
+        yield self
+      rescue Interrupt, RuntimeError, SystemCallError => e
+        raise unless ARGV.debug?
+        onoe e.inspect
+        puts e.backtrace
+        ohai "Rescuing build..."
+        puts "When you exit this shell Homebrew will attempt to finalise the installation."
+        puts "If nothing is installed or the shell exits with a non-zero error code,"
+        puts "Homebrew will abort. The installation prefix is:"
+        puts prefix
+        interactive_shell
+      end
+>>>>>>> 0a31190fdc (Dependency resolution)
     end
   end
 

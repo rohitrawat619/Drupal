@@ -1,12 +1,238 @@
 #!/bin/bash -p
 set -u
 
+<<<<<<< HEAD
 # Fail fast with concise message when not using bash
 # Single brackets is needed here for POSIX compatibility
 # shellcheck disable=SC2292
 if [ -z "${BASH_VERSION:-}" ]
 then
   echo "Error: Bash is required to run brew." >&2
+=======
+if Process.uid == 0
+  # technically this is not the correct place, this cache is for *all users*
+  # so in that case, maybe we should always use it, root or not?
+  HOMEBREW_CACHE=Pathname.new("/Library/Caches/Homebrew")
+else
+  HOMEBREW_CACHE=Pathname.new("~/Library/Caches/Homebrew").expand_path
+end
+
+HOMEBREW_PREFIX=(Pathname.getwd+__FILE__).dirname.parent.cleanpath
+HOMEBREW_CELLAR=HOMEBREW_PREFIX+'Cellar'
+HOMEBREW_VERSION='0.4'
+HOMEBREW_WWW='http://bit.ly/Homebrew'
+HOMEBREW_USER_AGENT="Homebrew #{HOMEBREW_VERSION} (Ruby #{VERSION}; Mac OS X 10.5 Leopard)"
+
+if %w[/ /usr].include? HOMEBREW_PREFIX.to_s then abort <<-EOS
+  You have placed Homebrew at the prefix: #{HOMEBREW_PREFIX}
+  This is not currently supported. Voice your support for this feature at:
+  #{HOMEBREW_WWW}
+  EOS
+end
+if `sw_vers -productVersion` =~ /10\.(\d)\.(\d+)/ and $1.to_i < 5
+  onoe "Homebrew requires Leopard or higher"
+  abort "But thanks for your interest anyway!"
+end
+if Hardware.cpu_type == :ppc or Hardware.cpu_type == :dunno
+  abort "Sorry, Homebrew does not support your computer's CPU architecture."
+end
+unless system "which -s gcc-4.2" and $?.success?
+  abort "Sorry, Homebrew requires gcc 4.2, which is provided by Xcode 3.1"
+end
+
+begin
+  case ARGV.shift
+    when '--prefix' then puts HOMEBREW_PREFIX
+    when '--cache' then puts HOMEBREW_CACHE
+    when '-h', '--help', '--usage', '-?' then puts ARGV.usage
+    when '-v', '--version' then puts HOMEBREW_VERSION
+
+    when 'home', 'homepage'
+      if ARGV.named_empty?
+        exec "open", HOMEBREW_WWW
+      else
+        exec "open", *ARGV.formulae.collect {|f| f.homepage}
+      end
+
+    when 'ls', 'list'
+      if ARGV.named_empty?
+        ENV['CLICOLOR']=nil
+        exec 'ls', *ARGV.options<<HOMEBREW_CELLAR
+      else
+        exec "find", *ARGV.kegs+%w[-not -type d -print]
+      end
+
+    when 'search', '-S'
+      formulae = (HOMEBREW_PREFIX+'Library'+'Formula').children.sort.map{|f| f.basename('.rb') }
+      puts_columns formulae.grep(Regexp.new(ARGV.first || ''))
+
+    when 'edit'
+      if ARGV.named_empty?
+        # EDITOR isn't a good fit here, we need a GUI client that actually has
+        # a UI for projects, so apologies if this wasn't what you expected,
+        # please improve it! :)
+        exec 'mate', *Dir["#{HOMEBREW_PREFIX}/Library/*"]<<
+                          "#{HOMEBREW_PREFIX}/bin/brew"<<
+                          "#{HOMEBREW_PREFIX}/README"
+      else
+        exec_editor *ARGV.formulae.collect {|f| f.path}
+      end
+
+    when 'install'
+      if ARGV.named_empty?
+        puts "You must specify a formula. Search for available formulae with `brew search'."
+        exit 0
+      end
+
+      require 'brewkit'
+
+      if ARGV.verbose?
+        ohai "Build Environment"
+        %w[CFLAGS LDFLAGS CPPFLAGS MAKEFLAGS CC CXX].each do |f|
+          puts "#{f}: #{ENV[f]}" unless ENV[f].to_s.empty?
+        end
+      end
+
+      unless system "which #{ENV['CC'] or 'cc'} &> /dev/null" and $?.success?
+        raise "We cannot find a c compiler, have you installed the latest Xcode?"
+      end
+
+      fae = ARGV.formulae.reject do |f|
+        if f.installed? and not ARGV.force?
+          message = "Formula already installed: #{f.prefix}"
+          if ARGV.formulae.count > 1
+            opoo message
+          else
+            puts message # if only one is being installed a warning looks severe
+          end
+          true
+        end
+      end
+
+      fae=expand_deps ARGV.formulae
+
+      require 'beer_events'
+
+      watch_out_for_spill do
+        fae.each do |f|
+          # we need to ensure a pristine ENV for each process or the formula
+          # will start with the ENV from the previous build
+          pid=fork
+          if pid.nil?
+            exec __FILE__, "install-just-one", f.name, *ARGV.options
+          else
+            Process.wait pid
+          end
+          #FIXME I don't think $? represents the exit code from the child fork…
+          exit! $? if $? != 0 # exception in other brew will be visible on screen
+        end
+      end
+
+    # this is an internal option, don't expose it to the user
+    when 'install-just-one'
+      require 'keg'
+
+      f=ARGV.formulae.shift
+
+      begin
+        build_time=install f
+        ohai "Caveats", f.caveats, ''
+        ohai 'Finishing up' if ARGV.verbose?
+        clean f
+        raise "Nothing was installed to #{f.prefix}" unless f.installed?
+      rescue Exception
+        if f.prefix.directory?
+          f.prefix.rmtree
+          f.prefix.parent.rmdir_if_possible
+        end
+        raise
+      end
+
+      begin
+        Keg.new(f.prefix).link
+      rescue Exception
+        onoe "The linking step did not complete successfully"
+        puts "The package built, but is not symlinked into #{HOMEBREW_PREFIX}"
+        puts "You can try again using `brew link #{f.name}'"
+        ohai "Summary" unless ARGV.verbose?
+      end
+
+      ohai "Summary" if ARGV.verbose?
+      print "#{f.prefix}: #{f.prefix.abv}"
+      print ", built in #{pretty_duration build_time}" if build_time
+      puts
+
+    when 'ln', 'link'
+      ARGV.kegs.each {|keg| puts "#{keg.link} links created for #{keg}"}
+
+    when 'unlink'
+      ARGV.kegs.each {|keg| puts "#{keg.unlink} links removed for #{keg}"}
+
+    when 'rm', 'uninstall', 'remove'
+      ARGV.kegs.each do |keg|
+        puts "Uninstalling #{keg}..."
+        keg.uninstall
+      end
+      prune
+
+    when 'up', 'update'
+      puts "You can't yet update :( But you can try:"
+      puts "    git pull"
+      puts "    brew rm foo"
+      puts "    brew install foo"
+
+    when 'prune'
+      prune
+
+    # 'make' supported until 0.7 for historic reasons
+    when 'mk', 'make'
+      opoo "`brew make' has changed to `brew create'"
+      puts "This is because make can be confused with the `make' tool."
+      puts "brew make will continue working until Homebrew 0.7"
+      exec __FILE__, "create", *ARGV
+
+    when 'create'
+      if ARGV.include? '--macports'
+        exec "open", "http://www.macports.org/ports.php?by=name&substr=#{ARGV.next}"
+      else
+        exec_editor *ARGV.collect {|name| make name}
+      end
+
+    when 'diy', 'configure'
+      puts diy
+
+    when 'info', 'abv'
+      if ARGV.named_empty?
+        puts `ls #{HOMEBREW_CELLAR} | wc -l`.strip+" kegs, "+HOMEBREW_CELLAR.abv
+      elsif ARGV[0][0..6] == 'http://'
+        puts Pathname.new(ARGV.shift).version
+      else
+        ARGV.named.each {|name| info name}
+      end
+
+    else
+      puts ARGV.usage
+  end
+
+rescue UsageError
+  onoe "Invalid usage"
+  puts ARGV.usage
+rescue SystemExit
+  ohai "Kernel.exit" if ARGV.verbose?
+rescue Interrupt => e
+  # puts # seemingly a newline is typical
+  # Above is now commented out because the system() call forks and then forks
+  # again, so there are two of "us" so we get two exceptions raising and thus
+  # two newlines, which buggers up the shell. FIXME!
+  exit 130
+rescue SystemCallError, RuntimeError => e
+  if ARGV.debug?
+    onoe e.inspect
+    puts e.backtrace
+  else
+    onoe e
+  end
+>>>>>>> 0a31190fdc (Dependency resolution)
   exit 1
 fi
 
