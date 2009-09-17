@@ -7,6 +7,7 @@ require "hardware"
 require "development_tools"
 require "upgrade"
 
+<<<<<<< HEAD
 module Homebrew
   # Helper module for performing (pre-)install checks.
   module Install
@@ -17,6 +18,44 @@ module Homebrew
         @perform_preinstall_checks_once[all_fatal] ||= begin
           perform_preinstall_checks(all_fatal:)
           true
+=======
+def text_for_keg_only_formula f
+  <<-EOS
+#{f.name} is keg-only. This means it is not symlinked into Homebrew's
+prefix. The formula provides the following rationale:
+
+#{f.keg_only?}
+
+Generally there are no consequences of this for you, however if you build your
+own software and it requires this formula, you may want to run this command to
+link it into the Homebrew prefix:
+
+     brew link #{f.name}
+  EOS
+end
+
+def install f  
+  build_time = nil
+
+  begin
+    f.brew do
+      if ARGV.flag? '--interactive'
+        ohai "Entering interactive mode"
+        puts "Type `exit' to return and finalize the installation"
+        puts "Install to this prefix: #{f.prefix}"
+        interactive_shell
+        nil
+      elsif ARGV.include? '--help'
+        system './configure --help'
+        exit $?
+      else
+        f.prefix.mkpath
+        beginning=Time.now
+        f.install
+        %w[README ChangeLog COPYING LICENSE COPYRIGHT AUTHORS].each do |file|
+          FileUtils.mv "#{file}.txt", file rescue nil
+          f.prefix.install file rescue nil
+>>>>>>> ee2b521ca8 (Solving the GNU GetText issues)
         end
       end
 
@@ -362,6 +401,34 @@ module Homebrew
       end
     end
   end
+<<<<<<< HEAD
+=======
+
+  if f.keg_only?
+    ohai 'Caveats', text_for_keg_only_formula(f)
+    show_summary_heading = true
+  else
+    begin
+      Keg.new(f.prefix).link
+    rescue Exception
+      onoe "The linking step did not complete successfully"
+      puts "The package built, but is not symlinked into #{HOMEBREW_PREFIX}"
+      puts "You can try again using `brew link #{f.name}'"
+      ohai e, e.inspect if ARGV.debug?
+      show_summary_heading = true
+    end
+  end
+
+  ohai "Summary" if ARGV.verbose? or show_summary_heading
+  print "#{f.prefix}: #{f.prefix.abv}"
+  print ", built in #{pretty_duration build_time}" if build_time
+  puts
+
+rescue Exception => e
+  #TODO propogate exception back to brew script
+  onoe e
+  puts e.backtrace
+>>>>>>> ee2b521ca8 (Solving the GNU GetText issues)
 end
 
 require "extend/os/install"
