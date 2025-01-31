@@ -428,6 +428,7 @@ class Keg
 
     # yeah indeed, you have to force anything you need in the main tree into
     # these dirs REMEMBER that *NOT* everything needs to be in the main tree
+<<<<<<< HEAD
     link_dir("etc", verbose:, dry_run:, overwrite:) { :mkpath }
     link_dir("bin", verbose:, dry_run:, overwrite:) { :skip_dir }
     link_dir("sbin", verbose:, dry_run:, overwrite:) { :skip_dir }
@@ -504,6 +505,23 @@ class Keg
     raise
   else
     ObserverPathnameExtension.n
+=======
+    link_dir('etc') {:mkpath}
+    link_dir('bin') {:skip}
+    link_dir('sbin') {:link}
+    link_dir('include') {:link}
+    link_dir('share') {|path| :mkpath if mkpaths.include? path.to_s}
+
+    link_dir('lib') do |path|
+      case path.to_s
+      when /^pkgconfig/ then :mkpath
+      when /^php/ then :mkpath
+      when /^perl5/ then :mkpath
+      end
+    end
+
+    return $n+$d
+>>>>>>> a8d6a695bc (mkpath for all directories under lib/perl5)
   end
 
   def prepare_debug_symbols; end

@@ -117,12 +117,45 @@ class Formula
   sig { returns(T.nilable(String)) }
   attr_reader :full_alias_name
 
+<<<<<<< HEAD
   # The full path to this {Formula}.
   # e.g. `/usr/local/Library/Taps/homebrew/homebrew-core/Formula/t/this-formula.rb`
   #
   # @api public
   sig { returns(Pathname) }
   attr_reader :path
+=======
+  # reimplement if we don't autodetect the download strategy you require
+  def download_strategy
+    case url
+    when %r[^svn://] then SubversionDownloadStrategy
+    when %r[^git://] then GitDownloadStrategy
+    when %r[^http://(.+?\.)?googlecode\.com/svn] then SubversionDownloadStrategy
+    when %r[^http://svn.apache.org/repos/] then SubversionDownloadStrategy
+    else HttpDownloadStrategy
+    end
+  end
+  # tell the user about any caveats regarding this package
+  def caveats; nil end
+  # patches are automatically applied after extracting the tarball
+  # return an array of strings, or if you need a patch level other than -p0
+  # return a Hash eg.
+  #   {
+  #     :p0 => ['http://foo.com/patch1', 'http://foo.com/patch2'],
+  #     :p1 =>  'http://bar.com/patch2',
+  #     :p2 => ['http://moo.com/patch5', 'http://moo.com/patch6']
+  #   }
+  # The final option is to return DATA, then put a diff after __END__. You
+  # can still return a Hash with DATA as the value for a patch level key.
+  def patches; end
+  # reimplement and specify dependencies
+  def deps; end
+  # sometimes the clean process breaks things, return true to skip anything
+  def skip_clean? path; false end
+  # rarely, you don't want your library symlinked into the main prefix
+  # see gettext.rb for an example
+  def keg_only?; false end
+>>>>>>> ee2b521ca8 (Solving the GNU GetText issues)
 
   # The {Tap} instance associated with this {Formula}.
   # If it's `nil`, then this formula is loaded from a path or URL.
@@ -2005,6 +2038,8 @@ class Formula
   # If called with no parameters, does this with all compatible
   # universal binaries in a {Formula}'s {Keg}.
   #
+  # Raises an error if no universal binaries are found to deuniversalize.
+  #
   # @api public
   sig { params(targets: T.nilable(T.any(Pathname, String))).void }
   def deuniversalize_machos(*targets)
@@ -2013,6 +2048,8 @@ class Formula
         file.arch == :universal && file.archs.include?(Hardware::CPU.arch)
       end
     end
+
+    raise "No universal binaries found to deuniversalize" if targets.blank?
 
     targets&.each do |target|
       extract_macho_slice_from(Pathname(target), Hardware::CPU.arch)
