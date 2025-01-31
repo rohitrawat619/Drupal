@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the Transform API module.
+ */
+
+/**
+ * Install config entities.
+ */
+function transform_api_update_9001() {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  \Drupal::entityDefinitionUpdateManager()
+    ->installEntityType(\Drupal::entityTypeManager()->getDefinition('entity_transform_display'));
+  \Drupal::entityDefinitionUpdateManager()
+    ->installEntityType(\Drupal::entityTypeManager()->getDefinition('entity_transform_mode'));
+}
+
+/**
+ * Install transform_block entity.
+ */
+function transform_api_update_9002() {
+  \Drupal::entityTypeManager()->clearCachedDefinitions();
+  \Drupal::entityDefinitionUpdateManager()
+    ->installEntityType(\Drupal::entityTypeManager()->getDefinition('transform_block'));
+}
+
+/**
+ * Install transform_api_responsive_image.
+ */
+function transform_api_update_9003() {
+  /** @var \Drupal\Core\Extension\ModuleInstaller $installer */
+  $installer = \Drupal::service('module_installer');
+  $installer->install(['transform_api_responsive_image']);
+}

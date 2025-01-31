@@ -1,0 +1,4 @@
+regions:
+  content: Content
+default_region: content
+collapse_regions: false

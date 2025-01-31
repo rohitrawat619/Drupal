@@ -1,0 +1,11 @@
+transform_api_comment.add:
+  path: '/transform/comment/add/{entity_type_id}/{entity_id}/{field_name}/{comment_type}'
+  defaults:
+    _title: 'Add comment'
+    _controller: '\Drupal\transform_api_comment\Controller\CommentTransformController::add'
+  methods: [POST]
+  options:
+    _auth: ['basic_auth', 'cookie', 'oauth2']
+  requirements:
+    _permission: 'post comments'
+    _format: json

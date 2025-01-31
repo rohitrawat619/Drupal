@@ -1,0 +1,6 @@
+name: "Hello World"
+type: module
+description: "A simple Hello World module."
+core_version_requirement: ^9 || ^10
+package: Custom
+version: 1.0.0

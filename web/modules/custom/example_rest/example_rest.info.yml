@@ -1,0 +1,5 @@
+name: Example_Rest
+type: module
+description: "example_rest rest api"
+package: custom example
+core_version_requirement: ^9.4 || ^10
