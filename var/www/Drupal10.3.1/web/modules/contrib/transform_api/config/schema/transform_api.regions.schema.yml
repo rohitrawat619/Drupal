@@ -1,0 +1,22 @@
+# Schema for the configuration files of the transform_api module.
+
+transform_api.regions:
+  type: config_object
+  label: 'Transform block regions'
+  mapping:
+    langcode:
+      type: string
+      label: 'Language code'
+    regions:
+      type: sequence
+      label: 'The transform block regions'
+      sequence:
+        type: label
+        translation context: 'Transform block region'
+        label: 'Label for the region'
+    default_region:
+      type: string
+      label: 'The region selected as the default'
+    collapse_regions:
+      type: boolean
+      label: 'Whether to collapse regions if there is only a single block'

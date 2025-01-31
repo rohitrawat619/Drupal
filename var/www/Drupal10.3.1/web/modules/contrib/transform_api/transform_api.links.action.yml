@@ -1,0 +1,13 @@
+transform_api.entity_transform_mode_add:
+  route_name: transform_api.entity_transform_mode_add
+  title: 'Add transform mode'
+  weight: 1
+  appears_on:
+    - entity.entity_transform_mode.collection
+
+transform_api.transform_blocks.region_add:
+  route_name: transform_api.transform_blocks.region_add
+  title: 'Add region'
+  weight: 1
+  appears_on:
+    - transform_api.transform_blocks.regions

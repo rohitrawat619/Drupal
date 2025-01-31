@@ -1,0 +1,14 @@
+name: Transform API
+description: Expose routes and entities transformed to JSON with an API.
+type: module
+package: Web services
+configure: transform_api.transform_block.admin_display
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - drupal:field_ui
+
+# Information added by Drupal.org packaging script on 2024-06-07
+version: '1.0.2'
+project: 'transform_api'
+datestamp: 1717752364

@@ -1,0 +1,5 @@
+administer transform blocks:
+  title: 'Administer transform blocks'
+
+permission_callbacks:
+  - Drupal\transform_api\TransformPermissions::fieldPermissions

@@ -1,0 +1,183 @@
+transform_api.entity:
+  path: '/transform/entity/{entity_type}/{id}'
+  defaults:
+    _title: 'Transforms entity into JSON response.'
+    _controller: '\Drupal\transform_api\Controller\EntityController::view'
+  methods: [GET]
+  options:
+    _auth: ['basic_auth', 'cookie', 'oauth2']
+  requirements:
+    _permission: 'access content'
+    _format: json
+
+transform_api.entity.transform_mode:
+  path: '/transform/entity/{entity_type}/{id}/{transform_mode}'
+  defaults:
+    _title: 'Transforms entity into JSON response.'
+    _controller: '\Drupal\transform_api\Controller\EntityController::view'
+  methods: [GET]
+  options:
+    _auth: ['basic_auth', 'cookie', 'oauth2']
+  requirements:
+    _permission: 'access content'
+    _format: json
+
+transform_api.page:
+  path: '/transform/route'
+  defaults:
+    _title: 'Transforms route into JSON response.'
+    _controller: '\Drupal\transform_api\Controller\RouteController::route'
+  methods: [GET]
+  options:
+    _auth: ['basic_auth', 'cookie', 'oauth2']
+  requirements:
+    _permission: 'access content'
+    _format: json
+
+entity.entity_transform_mode.collection:
+  path: '/admin/structure/display-modes/transform'
+  defaults:
+    _entity_list: 'entity_transform_mode'
+    _title: 'Transform modes'
+  requirements:
+    _permission: 'administer display modes'
+
+transform_api.entity_transform_mode_add:
+  path: '/admin/structure/display-modes/transform/add'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\EntityDisplayModeController::transformModeTypeSelection'
+    _title: 'Choose transform mode entity type'
+  requirements:
+    _permission: 'administer display modes'
+
+entity.entity_transform_mode.add_form:
+  path: '/admin/structure/display-modes/transform/add/{entity_type_id}'
+  defaults:
+    _entity_form: 'entity_transform_mode.add'
+    _title: 'Add transform mode'
+  requirements:
+    _permission: 'administer display modes'
+
+entity.entity_transform_mode.edit_form:
+  path: '/admin/structure/display-modes/transform/manage/{entity_transform_mode}'
+  defaults:
+    _entity_form: 'entity_transform_mode.edit'
+    _title: 'Edit transform mode'
+  requirements:
+    _entity_access: 'entity_transform_mode.update'
+
+entity.entity_transform_mode.delete_form:
+  path: '/admin/structure/display-modes/transform/manage/{entity_transform_mode}/delete'
+  defaults:
+    _entity_form: 'entity_transform_mode.delete'
+    _title: 'Delete transform mode'
+  requirements:
+    _entity_access: 'entity_transform_mode.delete'
+
+transform_api.entity_autocomplete:
+  path: '/transform_reference_autocomplete/{target_type}/{selection_handler}/{selection_settings_key}'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\EntityAutocompleteController::handleAutocomplete'
+  requirements:
+    # fully open, just like the core version
+    _access: 'TRUE'
+
+##
+## Transform block routes
+##
+entity.transform_block.delete_form:
+  path: '/admin/structure/block/transform/manage/{transform_block}/delete'
+  defaults:
+    _entity_form: 'transform_block.delete'
+    _title: 'Remove block'
+  requirements:
+    _permission: 'administer transform blocks'
+
+entity.transform_block.edit_form:
+  path: '/admin/structure/block/transform/manage/{transform_block}'
+  defaults:
+    _entity_form: 'transform_block.default'
+    _title: 'Configure block'
+  requirements:
+    _entity_access: 'transform_block.update'
+
+entity.transform_block.enable:
+  path: '/admin/structure/block/transform/manage/{transform_block}/enable'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\BlockController::performOperation'
+    op: enable
+  requirements:
+    _permission: 'administer transform blocks'
+    _csrf_token: 'TRUE'
+
+entity.transform_block.disable:
+  path: '/admin/structure/block/transform/manage/{transform_block}/disable'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\BlockController::performOperation'
+    op: disable
+  requirements:
+    _permission: 'administer transform blocks'
+    _csrf_token: 'TRUE'
+
+transform_api.transform_block.admin_display:
+  path: '/admin/structure/block/transform'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\BlockController::listing'
+    _title: 'Transform blocks'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_blocks.regions:
+  path: '/admin/structure/block/transform/region'
+  defaults:
+    _form: '\Drupal\transform_api\Form\TransformBlockRegionOverviewForm'
+    _title: 'Regions'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_blocks.region_add:
+  path: '/admin/structure/block/transform/region/add'
+  defaults:
+    _form: '\Drupal\transform_api\Form\TransformBlockRegionEditForm'
+    _title: 'Add region'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_blocks.region_edit:
+  path: '/admin/structure/block/transform/region/edit/{region}'
+  defaults:
+    _form: '\Drupal\transform_api\Form\TransformBlockRegionEditForm'
+    _title: 'Edit region'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_blocks.region_delete:
+  path: '/admin/structure/block/transform/region/delete/{region}'
+  defaults:
+    _form: '\Drupal\transform_api\Form\TransformBlockRegionDeleteForm'
+    _title: 'Delete region'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_block.admin_library:
+  path: '/admin/structure/block/transform/library'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\BlockController::listBlocks'
+    _title: 'Place block'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_block.admin_add:
+  path: '/admin/structure/block/transform/add/{plugin_id}'
+  defaults:
+    _controller: '\Drupal\transform_api\Controller\BlockController::blockAddConfigureForm'
+    _title: 'Configure block'
+  requirements:
+    _permission: 'administer transform blocks'
+
+transform_api.transform_block.category_autocomplete:
+  path: '/transform-block-category/autocomplete'
+  defaults:
+    _controller: '\Drupal\block\Controller\CategoryAutocompleteController::autocomplete'
+  requirements:
+    _permission: 'administer transform blocks'
