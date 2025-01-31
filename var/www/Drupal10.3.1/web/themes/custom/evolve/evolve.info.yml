@@ -1,0 +1,15 @@
+name: Evolve
+type: theme
+base theme: false
+description: "A evolve to create a custom theme."
+package: custom
+version: "1.0.0"
+core_version_requirement: ^9|| ^10
+
+libraries:
+  - evolve/global-styling
+
+regions:
+  header: Header
+  content: Content
+  footer: Footer

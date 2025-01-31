@@ -1,0 +1,28 @@
+transform_api.fields:
+  class: \Drupal\Core\Menu\LocalTaskDefault
+  deriver: \Drupal\transform_api\Plugin\Derivative\TransformLocalTask
+
+entity.entity_transform_mode.edit_form:
+  title: 'Edit'
+  route_name: entity.entity_transform_mode.edit_form
+  base_route: entity.entity_transform_mode.edit_form
+
+entity.entity_transform_mode.collection:
+  title: List
+  route_name: entity.entity_transform_mode.collection
+  base_route: entity.entity_transform_mode.collection
+
+transform_api.blocks.collection:
+  title: 'Transform blocks'
+  route_name: transform_api.transform_block.admin_display
+  base_route: block.admin_display
+
+transform_api.blocks.collection.blocks:
+  title: 'Blocks'
+  route_name: transform_api.transform_block.admin_display
+  parent_id: transform_api.blocks.collection
+
+transform_api.blocks.collection.regions:
+  title: 'Regions'
+  route_name: transform_api.transform_blocks.regions
+  parent_id: transform_api.blocks.collection

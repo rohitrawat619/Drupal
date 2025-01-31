@@ -1,0 +1,14 @@
+name: Transform API Comment
+description: Comment support for Transform API
+type: module
+package: Web services
+core_version_requirement: ^9 || ^10
+
+dependencies:
+  - core:comment
+  - transform_api:transform_api
+
+# Information added by Drupal.org packaging script on 2024-06-07
+version: '1.0.2'
+project: 'transform_api'
+datestamp: 1717752364

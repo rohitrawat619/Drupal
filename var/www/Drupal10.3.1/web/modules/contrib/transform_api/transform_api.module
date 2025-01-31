@@ -1,0 +1,147 @@
+<?php
+
+/**
+ * @file
+ * Expose routes and entities transformed to JSON with an API.
+ */
+
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Url;
+use Drupal\transform_api\EntityTransformModeInterface;
+use Drupal\transform_api\Plugin\Derivative\TransformLocalTask;
+
+/**
+ * Implements hook_entity_type_build().
+ */
+function transform_api_entity_type_build(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  $entity_types['entity_transform_display']->setFormClass('edit', 'Drupal\transform_api\Form\EntityTransformDisplayEditForm');
+
+  $transform_mode = $entity_types['entity_transform_mode'];
+  $transform_mode->setListBuilderClass('Drupal\transform_api\EntityTransformModeListBuilder');
+  // @todo Remove once Drupal 10.1.x is only supported.
+  if (floatval(\Drupal::VERSION) >= 10.2) {
+    $transform_mode->setFormClass('add', 'Drupal\transform_api\Form\EntityDisplayModeAddForm');
+    $transform_mode->setFormClass('edit', 'Drupal\transform_api\Form\EntityDisplayModeEditForm');
+  }
+  else {
+    $transform_mode->setFormClass('add', 'Drupal\field_ui\Form\EntityDisplayModeAddForm');
+    $transform_mode->setFormClass('edit', 'Drupal\field_ui\Form\EntityDisplayModeEditForm');
+  }
+  $transform_mode->setFormClass('delete', 'Drupal\field_ui\Form\EntityDisplayModeDeleteForm');
+  $transform_mode->set('admin_permission', 'administer display modes');
+  $transform_mode->setLinkTemplate('delete-form', '/admin/structure/display-modes/transform/manage/{entity_transform_mode}/delete');
+  $transform_mode->setLinkTemplate('edit-form', '/admin/structure/display-modes/transform/manage/{entity_transform_mode}');
+  $transform_mode->setLinkTemplate('add-form', '/admin/structure/display-modes/transform/add/{entity_transform_mode}');
+  $transform_mode->setLinkTemplate('collection', '/admin/structure/display-modes/transform');
+}
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function transform_api_local_tasks_alter(&$local_tasks) {
+  $container = \Drupal::getContainer();
+  $local_task = TransformLocalTask::create($container, 'field_ui.fields');
+  $local_task->alterLocalTasks($local_tasks);
+}
+
+/**
+ * Implements hook_entity_operation().
+ */
+function transform_api_entity_operation(EntityInterface $entity) {
+  $operations = [];
+  $info = $entity->getEntityType();
+  // Add manage fields and display links if this entity type is the bundle
+  // of another and that type has field UI enabled.
+  if (($bundle_of = $info->getBundleOf()) && \Drupal::entityTypeManager()->getDefinition($bundle_of)->get('field_ui_base_route')) {
+    $account = \Drupal::currentUser();
+    if ($account->hasPermission('administer ' . $bundle_of . ' transform')) {
+      $operations['manage-transform'] = [
+        'title' => t('Manage transform'),
+        'weight' => 20,
+        'url' => Url::fromRoute("entity.entity_transform_display.$bundle_of.default", [
+          $entity->getEntityTypeId() => $entity->id(),
+        ]),
+      ];
+    }
+  }
+
+  return $operations;
+}
+
+/**
+ * Implements hook_entity_transform_mode_presave().
+ */
+function transform_api_entity_transform_mode_presave(EntityTransformModeInterface $transform_mode) {
+  \Drupal::service('router.builder')->setRebuildNeeded();
+}
+
+/**
+ * Implements hook_entity_transform_mode_delete().
+ */
+function transform_api_entity_transform_mode_delete(EntityTransformModeInterface $transform_mode) {
+  \Drupal::service('router.builder')->setRebuildNeeded();
+}
+
+/**
+ * Implements hook_entity_base_field_info_alter().
+ */
+function transform_api_entity_base_field_info_alter(&$fields, EntityTypeInterface $entity_type) {
+  /** @var \Drupal\Core\Field\BaseFieldDefinition $field */
+  foreach ($fields as $field) {
+    // If the field is configurable for view display
+    // then it should be configurable for a transform mode.
+    if ($field->isDisplayConfigurable('view')) {
+      $field->setDisplayConfigurable('transform', TRUE);
+    }
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function transform_api_menu_insert(EntityInterface $entity) {
+  // Invalidate the transform block cache to update menu-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function transform_api_menu_update(EntityInterface $entity) {
+  // Invalidate the transform block cache to update menu-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function transform_api_menu_delete(EntityInterface $entity) {
+  // Invalidate the transform block cache to update menu-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_insert().
+ */
+function transform_api_block_content_insert(EntityInterface $entity) {
+  // Invalidate the transform block cache to update block content-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ */
+function transform_api_block_content_update(EntityInterface $entity) {
+  // Invalidate the transform block cache to update block content-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_delete().
+ */
+function transform_api_block_content_delete(EntityInterface $entity) {
+  // Invalidate the transform block cache to update block content-based derivatives.
+  \Drupal::service('plugin.manager.transform_api.transform_block')->clearCachedDefinitions();
+}

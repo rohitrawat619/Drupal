@@ -1,0 +1,7 @@
+name: "Candidates"
+type: module
+description: "A candidates to create a custom block programmatically."
+core_version_requirement: ^9|| ^10
+package: Custom
+dependencies:
+  - drupal:block

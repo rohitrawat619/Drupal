@@ -1,0 +1,15 @@
+entity.entity_transform_mode.collection:
+  title: 'Transform modes'
+  description: 'Manage custom transform modes.'
+  route_name: entity.entity_transform_mode.collection
+  parent: field_ui.display_mode
+
+transform_api.blocks.admin_display:
+  title: 'Transform blocks'
+  description: 'Manage custom transform blocks.'
+  route_name: transform_api.transform_block.admin_display
+  parent: block.admin_display
+
+transform_api.extra_links:
+  deriver: \Drupal\transform_api\Plugin\Derivative\ExtraLinks
+  menu_name: admin

@@ -1,0 +1,11 @@
+{
+    "name": "drupal/transform_api",
+    "type": "drupal-module",
+    "description": "Transform API",
+    "license": "GPL-2.0-or-later",
+    "homepage": "https://drupal.org/project/transform_api",
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.1.0"
+    }
+}

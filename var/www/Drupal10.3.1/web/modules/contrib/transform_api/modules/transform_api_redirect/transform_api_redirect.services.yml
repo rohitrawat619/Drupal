@@ -1,0 +1,7 @@
+services:
+  transform_api_redirect.response_subscriber:
+    class: Drupal\transform_api_redirect\EventSubscriber\RedirectResponseSubscriber
+    arguments:
+      - '@request_stack'
+    tags:
+      - { name: event_subscriber }

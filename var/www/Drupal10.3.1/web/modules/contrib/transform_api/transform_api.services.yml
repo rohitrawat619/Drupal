@@ -1,0 +1,81 @@
+services:
+  transform_api.transformer:
+    class: Drupal\transform_api\Transformer
+    arguments:
+      - '@plugin.manager.transform_api.transformation_type'
+      - '@transform_api.transformation_cache'
+      - '@module_handler'
+      - '@controller_resolver'
+
+  transform_api.transformation_cache:
+    class: Drupal\transform_api\EventSubscriber\TransformationCache
+    calls:
+      - ['setRenderCache', ['@render_cache']]
+    tags:
+      - { name: event_subscriber }
+
+  transform_api.transform_blocks:
+    class: Drupal\transform_api\TransformBlocks
+    arguments:
+      - '@module_handler'
+      - '@config.factory'
+      - '@cache.default'
+      - '@entity_type.manager'
+
+  transform_api.route_enhancer:
+    class: Drupal\transform_api\Routing\TransformRouteEnhancer
+    tags:
+      - { name: route_enhancer }
+
+  cache.transform:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: ['@cache_factory', 'get']
+    arguments: [transform]
+
+  access_check.transform_api.transform_mode:
+    class: Drupal\transform_api\Access\TransformModeAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _transform_api_transform_mode_access }
+
+  transform_api.entity_display.repository:
+    class: Drupal\transform_api\Repository\EntityTransformRepository
+    arguments:
+      - '@entity_type.manager'
+      - '@module_handler'
+      - '@cache.default'
+      - '@language_manager'
+
+  transform_api.route_subscriber:
+    class: Drupal\transform_api\Routing\RouteSubscriber
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: event_subscriber }
+
+  plugin.manager.transform_api.transformation_type:
+    class: Drupal\transform_api\TransformationTypeManager
+    parent: default_plugin_manager
+
+  plugin.manager.transform_api.field_transform:
+    class: Drupal\transform_api\FieldTransformManager
+    arguments:
+     - '@container.namespaces'
+     - '@cache.discovery'
+     - '@module_handler'
+     - '@plugin.manager.field.field_type'
+     - '@service_container'
+
+  plugin.manager.transform_api.section_component_transform:
+    class: Drupal\transform_api\SectionComponentTransformManager
+    parent: default_plugin_manager
+
+  plugin.manager.transform_api.transform_block:
+    class: Drupal\transform_api\TransformBlockManager
+    parent: default_plugin_manager
+    arguments: ['@logger.channel.default']
+
+  plugin.manager.transform_api.route_transform:
+    class: Drupal\transform_api\RouteTransformManager
+    parent: default_plugin_manager
